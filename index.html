@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>湘桥村|端午文化祝福</title>
+    <title>湘桥村端午祈福屏</title>
     <style>
         :root {
             --brick-red:#A83229;    /*湘桥古厝红砖色*/
@@ -119,10 +119,26 @@
 <script>
 let blessList = [];
 let timer = null;
-//闽南端午传统五色（红/绿/黄/青/橙，取自龙舟彩旗）
-const colorArr = ['#D92C2C','#3A8049','#FFD033','#348E99','#FF8933'];
+//【优化1：扩充闽南传统龙舟全色系，新增紫、玫红、浅青、金棕、湖蓝、草绿，大幅减少红色占比】
+const colorArr = [
+    '#D92C2C', //正红
+    '#3A8049',//墨绿
+    '#FFD033',//亮黄
+    '#348E99',//青蓝
+    '#FF8933',//橙
+    '#993399',//端午紫
+    '#FF5599',//玫粉
+    '#66DDAA',//浅艾草青
+    '#CC8844',//古厝棕黄
+    '#22BBEE',//浅湖蓝
+    '#99DD55'//嫩草绿
+];
 const inputPage = document.getElementById('inputPage');
 const showPage = document.getElementById('showPage');
+
+// 纵向分区变量：页面横向分成8个横向通道，弹幕固定通道生成，避免扎堆疏密失衡
+const lineCount = 8;
+let lineUsed = new Array(lineCount).fill(false); //标记通道是否占用
 
 function startShow(){
     let val = document.getElementById('txt').value.trim();
@@ -131,6 +147,7 @@ function startShow(){
     inputPage.style.display = 'none';
     showPage.style.display = 'block';
     if(timer) clearInterval(timer);
+    lineUsed.fill(false);
     createBarrage();
 }
 function backInput(){
@@ -138,10 +155,21 @@ function backInput(){
     showPage.style.display = 'none';
     inputPage.style.display = 'block';
     showPage.innerHTML = '<button class="back-btn" onclick="backInput()">← 返回修改祝福语</button>';
+    lineUsed.fill(false);
 }
 
 function createBarrage(){
-    timer = setInterval(()=>{
+    //【优化2：动态随机生成间隔 450~900ms，不再固定700ms，疏密更均匀】
+    function loopCreate(){
+        // 寻找空闲纵向轨道
+        let freeIndex = lineUsed.findIndex(v=>!v);
+        // 没有空闲轨道则跳过本次生成
+        if(freeIndex === -1){
+            timer = setTimeout(loopCreate,300);
+            return;
+        }
+        lineUsed[freeIndex] = true;
+
         let msg = blessList[Math.floor(Math.random()*blessList.length)];
         let div = document.createElement('div');
         div.className = 'barrage';
@@ -149,7 +177,8 @@ function createBarrage(){
         //字号：20~40px，贴合乡村大屏字幕大小
         let fontSize = 20 + Math.floor(Math.random()*21);
         let ranColor = colorArr[Math.floor(Math.random()*colorArr.length)];
-        let topPos = Math.random()*window.innerHeight;
+        //纵向均匀分配8条轨道，均分页面高度，杜绝随机扎堆
+        let topPos = (window.innerHeight / lineCount) * freeIndex + Math.random()*20;
         let speed = 1.6 + Math.random()*2.2;
 
         div.style.fontSize = fontSize+'px';
@@ -162,11 +191,19 @@ function createBarrage(){
             let left = parseFloat(div.style.left);
             left -= speed;
             div.style.left = left+'px';
-            if(left < -div.offsetWidth){div.remove();return;}
+            if(left < -div.offsetWidth){
+                div.remove();
+                lineUsed[freeIndex] = false; //弹幕离开释放轨道
+                return;
+            }
             requestAnimationFrame(move);
         }
         move();
-    },700)
+        //随机延时，动态控制生成速率
+        let nextDelay = 450 + Math.random()*450;
+        timer = setTimeout(loopCreate, nextDelay);
+    }
+    loopCreate();
 }
 </script>
 </body>
