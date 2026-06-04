@@ -175,7 +175,9 @@ function createBarrage(){
         div.className = 'barrage';
         div.innerText = msg;
         //字号：20~40px，贴合乡村大屏字幕大小
-        let fontSize = 20 + Math.floor(Math.random()*21);
+        // 【优化：文字大小明显错落，超大/中等/偏小 随机】
+        let sizeList = [24, 28, 35, 45, 60, 80]; // 明显不一样的字号池
+        let fontSize = sizeList[Math.floor(Math.random() * sizeList.length)];
         let ranColor = colorArr[Math.floor(Math.random()*colorArr.length)];
         //纵向均匀分配8条轨道，均分页面高度，杜绝随机扎堆
         let topPos = (window.innerHeight / lineCount) * freeIndex + Math.random()*20;
